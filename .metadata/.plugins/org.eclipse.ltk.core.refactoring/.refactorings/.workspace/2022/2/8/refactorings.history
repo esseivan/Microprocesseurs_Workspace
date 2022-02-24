@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">&#x0A;<refactoring comment="Delete resource &apos;msp430fr59xx_1.asm&apos;" deleteContents="true" description="Delete resource &apos;msp430fr59xx_1.asm&apos;" element1="/msp430fr59xx_1.asm" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1645623908539"/>&#x0A;<refactoring comment="Rename resource &apos;MSP-EXP430FR5969_Grlib_Example&apos; to &apos;MSP-EXP430FR5969_Grlib_java_Example&apos;" description="Rename resource &apos;MSP-EXP430FR5969_Grlib_Example&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="/MSP-EXP430FR5969_Grlib_Example" name="MSP-EXP430FR5969_Grlib_java_Example" stamp="1645626690335" updateReferences="true"/>
+</session>
