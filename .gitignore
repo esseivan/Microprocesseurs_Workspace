@@ -26,5 +26,7 @@ makefile
 .xdchelp
 # Uniflash session files
 *.uniflashsession
+.jxbrowser.userdata/
 
 # End of https://www.toptal.com/developers/gitignore/api/codecomposerstudio
+/.metadata/
