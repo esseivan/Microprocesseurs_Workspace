@@ -50,7 +50,6 @@ StopWDT     mov.w   #WDTPW|WDTHOLD,&WDTCTL  ; Stop watchdog timer
 			mov.w 	#0x11, 		R11
 			sub.w	R11,		R10
 
-
 			nop
 			nop
 
@@ -68,6 +67,44 @@ StopWDT     mov.w   #WDTPW|WDTHOLD,&WDTCTL  ; Stop watchdog timer
 			mov.w	#-36,		R10
 			mov.w 	#25, 		R11
 			add.w	R11,		R10 ; 25 + (-36) = -11, aucun carry
+
+
+			nop
+			nop
+
+
+; exo 3.4 : désassembler les instructions
+			bis.b #1, &PADIR_L ; D3D2 0204
+			bis.b #1, 0x204(SR) ; D3D2 0204
+
+
+; Test Constant Generator
+			clr.w	r4
+			clr.w	r5
+			mov.b 	r2,			r4 ; Register mode used => r2 is SR
+			mov.b	r3,			r5 ; Register mode used => r3 is 0
+			mov.b 	0(r2),			r4 ; Indexed mode (01) used => r2 is the address origin and constant as (0)
+			mov.b	0(r3),			r5 ; Indexed mode (01) used => r3 is +1
+			mov.b 	@r2,		r4 ; Indirect register mode (10) used => r2 is +4
+			mov.b	@r3,		r5 ; Indirect register mode (10) used => r3 is +2
+			mov.b 	#8,			r4 ; Immediate (11) used => r2 is used and is +8
+			mov.b	#-1,		r5 ; Immediate (11) used => r3 is used and is -1
+
+
+			nop
+			nop
+
+
+			mov.w #0x2006, r1
+			mov.w @SP, r4
+			push #0xFC47
+			push #0xD936
+			push #0x22FA
+
+			mov.w #0x34A3, r5
+L1:			rra r5
+			jc L1	; Carry is the LSB of the  value. JC tests the carry. 0 to skip
+			add.w &0x2002, r5
 
 
 
