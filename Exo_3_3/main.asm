@@ -39,21 +39,21 @@ StopWDT     mov.w   #WDTPW|WDTHOLD,&WDTCTL  ; Stop watchdog timer
 ; Main loop
 ;-------------------------------------------------------------------------------
 
-
+; a)
 ; Sum table
 			mov.w #0, Sum
 			mov.b #0, r15 ; Index
-Loop:		mov.w #Values, r4	; Copy target address
-			add.w r15, r4 ; Add index
-			mov.b @r4, r6 ; Get the byte, .b must be used
+			mov.w #Values, r4	; Copy target address
+Loop:		mov.b @r4+, r6 ; Get the byte, .b must be used
 			sxt r6 ; Converti la valeur signée 8bit en 16bit
 			add.w r6, Sum ; Add the value
 			inc.b r15 ; Increment index
 
 			; Check index value
-			mov.b #NB_VAL, r5 ; Copy nb values
-			sub.b r15, r5 ; NB_VALUES - index
-			jnz Loop ; Skip when NB_VALUES - index = 0
+			cmp.w #NB_VAL, r15
+			jlo Loop ; Skip when NB_VALUES - index = 0
+
+; b)
 
 			mov.w Sum, r7 ; Copy Sum to r7
 			mov.b #NB_VAL, r5 ; Copy NB_VALUES to r5
@@ -66,6 +66,9 @@ Loop2:		rra.w r7 ; Divide r7 by 2
 			mov.w Sum, r8 ; Sum can be read on R8, Mean can be read on R7
 
             nop				;
+
+EndLoop:	jmp EndLoop
+			nop
 
 
 ;-------------------------------------------------------------------------------
