@@ -84,22 +84,71 @@ void initGPIO(void);
 void initChip(void);
 
 
-#define SIMULATE
+//#define SIMULATE
+
+
+void tc77_power_off(void)
+{
+    setTC77_CS();
+    spi_write8bitData(0x00);
+    spi_write8bitData(0x00);
+    spi_write16bitData(0xFFFF);
+    resetTC77_CS();
+}
+
+void tc77_power_on(void)
+{
+    setTC77_CS();
+    spi_write8bitData(0x00);
+    spi_write8bitData(0x00);
+    spi_write16bitData(0x0000);
+    resetTC77_CS();
+}
+
+//#define POWER_OFF_CYCLES
+
 //----------------------------------------------------------------------------
 // Fonction principale: main
 //----------------------------------------------------------------------------
 int main(void)
 {
 
-  initChip();
+  initChip(); // Clock is 8 MHz
 
   printf("\nTP6 - SPI with TC77 temperature sensor\n"); // Utilisation printf
   //https://public.iutenligne.net/informatique/algorithme-et-programmation/priou/LangageC/61_affichage__laide_de_la_fonction_printf.html
 
+  uint16_t i = 0;
+  tc77_power_on();
   while(1)
   {
     // measurement itself should be executed every 1s
     // note that TC77 temperature conversion takes up to 400ms...
+
+#ifdef POWER_OFF_CYCLES
+      i++;
+      switch(i) {
+      case 1:
+          printf("\t... powering off TC77\n");
+          tc77_power_off();
+          break;
+      case 2:
+          printf("\tTC77 still off\n");
+          break;
+      case 3:
+          printf("\t... powering on\n");
+          tc77_power_on();
+          break;
+      case 4:
+          printf("\tTC77 is on\n");
+          i = 0;
+          break;
+      default :
+          i = 0;
+          break;
+      }
+#endif
+
 
 
     const int16_t cTempBin = tc77_readTemp();   // 13-bit binary format with 0.0625 °C / bit
@@ -113,12 +162,14 @@ int main(void)
     }
     else
     {
+        // On divise par 16 pour avoir la valeur correcte (car 1/16 = 0.0625)
+        // Puis on multiplie par 10 pour avoir une décimale en integer
       const int16_t cTempConv = (5*cTempBin)/8; // in 0.1°C resolution
 
       printf("Temp = %3i.%u \n",cTempConv/10, abs(cTempConv%10));
     };
 
-   __delay_cycles(8000000);
+   __delay_cycles(8000000); // 1 sec
    
   }
 }
@@ -163,8 +214,8 @@ void spi_init(void)
             | UCSYNC        // Mode : SPI
             | UCSSEL__SMCLK;// Horloge : SMCLK
     // Fréquence désirée : 100 kHz
-    // La source étant de 8 MHz = 8000 kHz, on veut diviser par 80 => -1 => 79
-    UCB0BRW = 79;
+    // La source étant de 8 MHz = 8000 kHz, on veut diviser par 80
+    UCB0BRW = 80;
 
 #ifdef SIMULATE
     UCB0STATW |= UCLISTEN;  // Enable loopback for testing
@@ -205,6 +256,7 @@ uint16_t simulate_spi_read16bitData(void)
 }
 
 //-------------------
+
 void spi_write16bitData(uint16_t data)
 {
   enableSPI_MOSI(true);                     // necessary as TC77 has bidirectional SDIO
@@ -227,7 +279,8 @@ int16_t tc77_readTemp(void)
   if ((data & 0b0100) == 0) {               // Conversion invalide
       data = INT_MAX;
   } else {                                  // Conversion valide
-      data &= ~0b111;                       // Effacer les 3 LSB
+      //data &= ~0b111;                       // Effacer les 3 LSB
+      data >>= 3;                           // Décalage à droite de 3
   }
 
   return data;
