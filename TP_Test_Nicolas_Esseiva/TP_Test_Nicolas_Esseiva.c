@@ -19,29 +19,11 @@ void InitTimer(void) {
     TB0CTL = TBSSEL__ACLK   // Source : ACLK
             | MC__UP        // Mode : UP jusqu'à CCR0
             | TBIE          // Interrupt enable
-            | ID__8         // Diviseur par 8
             | TBCLR;        // Reset du compteur
     TB0EX0 = TBIDEX_7;     // Diviseur par 8
 
-    // Fclk = 10/32 kHz = 312.5 Hz
-    // Compte jusqu'à 16 en 10 s => f 1.6 Hz
-    // On doit diviser par 195.3125
-
-    // Je n'ai pas trouver comment arriver à avoir la fréquence correcte
-    // J'ai donc pris la plus petite que j'arrivais en divisant VLOCLK (10kHz)
-    // par 32*8*8 = 2048
-
     // CCR0 : limite du compteur
-    TB0CCR0 = 15;       // Compte jusqu'à 15
-
-    // Timer A0 comme séquence de comptage pour les sorties sur les pins
-    TA0CTL = TASSEL__ACLK   // Source : ACLK
-                | MC__UP        // Mode : UP jusqu'à CCR0
-                | TAIE          // Interrupt enable
-                | ID__4         // Diviseur par 4
-                | TACLR;        // Reset du compteur
-    TA0EX0 = TAIDEX_7;      // Diviseur par 8
-    TA0CCR0 = 1;            // Compte jusqu'à 1
+    TB0CCR0 = 6250;
 }
 
 void InitGPIO(void) {
@@ -108,55 +90,27 @@ int main(void)
 __interrupt void timerB_ISR(void) {
     switch (TBIV) {
         case TB0IV_TB0IFG: // Overflow du timer : toggle led
-            P1OUT ^= BIT0;
+			// P1.4 change tout le temps
+			P1OUT ^= BIT4;
+			// P1.5 change quand P1.4 passe ï¿½ 0
+			if((P1OUT & BIT4) == 0)
+				P1OUT ^= BIT5;
+			// etc... jusqu'ï¿½ P1.7
+			if((P1OUT & (BIT5 | BIT4)) == 0)
+				P1OUT ^= BIT6;
+			if((P1OUT & (BIT6 | BIT5 | BIT4)) == 0)
+				P1OUT ^= BIT7;
+
+			if(TB0R == 15)
+				P1OUT |= BIT0;
+			else
+				P1OUT &= ~BIT0;
+
+			__no_operation(); // pour debugger
             break;
         default: // Tous les autres : rien
             break;
     }
 
 
-}
-
-// Timer A0 ISR
-#pragma vector= TIMER0_A1_VECTOR
-__interrupt void timerA1_ISR(void)
-{
-    switch(TA0IV)
-    {
-    case TA0IV_TAIFG:
-        // P1.4 change tout le temps
-        P1OUT ^= BIT4;
-        // P1.5 change quand P1.4 passe à 0
-        if((P1OUT & BIT4) == 0)
-            P1OUT ^= BIT5;
-        // etc... jusqu'à P1.7
-        if((P1OUT & (BIT5 | BIT4)) == 0)
-            P1OUT ^= BIT6;
-        if((P1OUT & (BIT6 | BIT5 | BIT4)) == 0)
-            P1OUT ^= BIT7;
-
-        __no_operation(); // pour debugger
-        break;
-    default:
-        break;
-    }
-}
-
-// P1 ISR
-#pragma vector=PORT1_VECTOR
-__interrupt void P1_ISR(void) {
-    switch (P1IV) {
-        case P1IV_P1IFG1:
-            // Bouton S2
-            if(TimerState == 1) {
-                TimerState = 0;
-                TB0CTL &= ~MC_3; // Eteindre le timer
-            } else if (TimerState == 0) {
-                TimerState = 1;
-                TB0CTL |= MC__UP; // Allumer le timer
-            }
-            break;
-        default:
-            break;
-    }
 }
