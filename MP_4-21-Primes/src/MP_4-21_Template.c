@@ -43,7 +43,7 @@ void initPrimes(bool arr[], uint16_t nbrOfArrayValues)
 /// @return -
 void sieveofEratosthenes(bool arr[], uint16_t nbrOfArrayValues)
 {
-    for(uint16_t i = 2; i < nbrOfArrayValues; i++) { // 2 à nbrOfArrayValues-1
+    for(uint16_t i = 2; i < nbrOfArrayValues/2; i++) { // 2 à nbrOfArrayValues/2-1
         uint16_t mult = i;
         if(arr[mult] == true) {
             for(mult = 2*i; mult < nbrOfArrayValues; mult += i) {
